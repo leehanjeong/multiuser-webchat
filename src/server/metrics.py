@@ -101,6 +101,43 @@ ERRORS_TOTAL = Counter(
     labelnames=["type"],
 )
 
+# ===== New Metrics for Failure Detection =====
+
+# 1. Event Loop Health
+EVENTLOOP_LAG_SECONDS = Histogram(
+    "webchat_eventloop_lag_seconds",
+    "Event loop responsiveness (time to execute zero-delay callback)",
+    buckets=(0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0),
+)
+
+# 2. Redis Stream Backlog
+REDIS_STREAM_LAG_MESSAGES = Gauge(
+    "webchat_redis_stream_lag_messages",
+    "Unprocessed messages in Redis Stream",
+    multiprocess_mode="livesum",
+)
+
+# 3. Broadcast Queue Depth
+BROADCAST_QUEUE_DEPTH = Gauge(
+    "webchat_broadcast_queue_depth",
+    "Messages waiting to be broadcast to clients",
+    multiprocess_mode="livesum",
+)
+
+# 4. Process Memory
+PROCESS_MEMORY_RSS_BYTES = Gauge(
+    "webchat_process_memory_rss_bytes",
+    "Process resident memory in bytes",
+    multiprocess_mode="livesum",
+)
+
+# 5. End-to-End Message Latency
+MESSAGE_E2E_LATENCY_SECONDS = Histogram(
+    "webchat_message_e2e_latency_seconds",
+    "Time from message creation to broadcast completion",
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0),
+)
+
 
 @contextmanager
 def track_redis_operation(operation: str) -> Generator[None]:

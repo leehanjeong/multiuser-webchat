@@ -1,15 +1,21 @@
 import argparse
+import asyncio
 import logging
 import multiprocessing
 import os
 import signal
 import sys
+import time
 from pathlib import Path
 from types import FrameType
 
 from aiohttp import web
 
-from server.metrics import get_metrics_output
+from server.metrics import (
+    EVENTLOOP_LAG_SECONDS,
+    PROCESS_MEMORY_RSS_BYTES,
+    get_metrics_output,
+)
 from server.models import json_dumps
 from server.redis import RedisManager, install_redis_manager
 from server.ws import WSMessageRouter, install_ws_router
@@ -22,6 +28,34 @@ MINUTES_IN_HOUR = 60
 HOUR_IN_DAY = 24
 
 
+async def _monitor_eventloop_lag() -> None:
+    """Measure event loop responsiveness every 1 second."""
+    while True:
+        start = time.perf_counter()
+        await asyncio.sleep(0)  # Zero-delay callback to measure lag
+        lag = time.perf_counter() - start
+        EVENTLOOP_LAG_SECONDS.observe(lag)
+        await asyncio.sleep(1)
+
+
+async def _monitor_memory() -> None:
+    """Track process memory usage every 15 seconds."""
+    try:
+        import psutil
+    except ImportError:
+        logger.warning("psutil not installed, skipping memory monitoring")
+        return
+
+    process = psutil.Process()
+    while True:
+        try:
+            memory_info = process.memory_info()
+            PROCESS_MEMORY_RSS_BYTES.set(memory_info.rss)
+        except Exception:
+            logger.exception("Error collecting memory metrics")
+        await asyncio.sleep(15)
+
+
 async def on_startup(app: web.Application) -> None:
     redis_manager: RedisManager = app["redis_manager"]
     logger.info("Connecting to Redis...")
@@ -29,6 +63,11 @@ async def on_startup(app: web.Application) -> None:
     logger.info("Redis connected! Starting stream listener...")
     await redis_manager.start_listen()
     logger.info("The server is now ready to listen to Redis stream messages!")
+
+    # Start monitoring tasks
+    asyncio.create_task(_monitor_eventloop_lag())
+    asyncio.create_task(_monitor_memory())
+    logger.info("Started event loop and memory monitoring tasks")
 
 
 async def on_cleanup(app: web.Application) -> None:
