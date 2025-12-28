@@ -71,6 +71,9 @@ class WSMessageRouter:
     async def _initialize_ws(
         self, req: web.Request
     ) -> AsyncGenerator[web.WebSocketResponse]:
+        # Track connection attempt
+        CONNECTIONS_TOTAL.labels(status="attempted").inc()
+
         ws = web.WebSocketResponse(heartbeat=WS_HEARTBEAT_INTERVAL)
         logger.info("Connecting to WebSocket at address %s...", req.url)
 
