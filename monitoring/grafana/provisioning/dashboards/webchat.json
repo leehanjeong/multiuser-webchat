@@ -1141,6 +1141,657 @@
 			],
 			"title": "Total Errors by Type",
 			"type": "bargauge"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "yellow",
+								"value": 50
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unit": "percent"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 44
+			},
+			"id": 15,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"values": false,
+					"calcs": ["lastNotNull"],
+					"fields": ""
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.2.2",
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "sum(container_cpu_percent)",
+					"refId": "A"
+				}
+			],
+			"title": "Total CPU Usage",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"gradientMode": "none",
+						"hideFrom": {
+							"tooltip": false,
+							"viz": false,
+							"legend": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "never",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "line"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "yellow",
+								"value": 50
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unit": "percent"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 44
+			},
+			"id": 16,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "10.2.2",
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "container_cpu_percent",
+					"legendFormat": "{{container_name}}",
+					"refId": "A"
+				}
+			],
+			"title": "CPU Usage by Worker",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"gradientMode": "none",
+						"hideFrom": {
+							"tooltip": false,
+							"viz": false,
+							"legend": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "never",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "line"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "yellow",
+								"value": 0.05
+							},
+							{
+								"color": "red",
+								"value": 0.1
+							}
+						]
+					},
+					"unit": "s"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 52
+			},
+			"id": 17,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "10.2.2",
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "histogram_quantile(0.95, sum(rate(webchat_eventloop_lag_seconds_bucket[5m])) by (le))",
+					"legendFormat": "p95",
+					"refId": "A"
+				},
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "histogram_quantile(0.99, sum(rate(webchat_eventloop_lag_seconds_bucket[5m])) by (le))",
+					"legendFormat": "p99",
+					"refId": "B"
+				}
+			],
+			"title": "Event Loop Lag",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"gradientMode": "none",
+						"hideFrom": {
+							"tooltip": false,
+							"viz": false,
+							"legend": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "never",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "line"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "yellow",
+								"value": 100
+							},
+							{
+								"color": "red",
+								"value": 500
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 52
+			},
+			"id": 18,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "10.2.2",
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "sum(webchat_redis_stream_lag_messages)",
+					"legendFormat": "stream lag",
+					"refId": "A"
+				}
+			],
+			"title": "Redis Stream Lag",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"gradientMode": "none",
+						"hideFrom": {
+							"tooltip": false,
+							"viz": false,
+							"legend": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "never",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "line"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "yellow",
+								"value": 10
+							},
+							{
+								"color": "red",
+								"value": 50
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 60
+			},
+			"id": 19,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "10.2.2",
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "sum(webchat_broadcast_queue_depth)",
+					"legendFormat": "queue depth",
+					"refId": "A"
+				}
+			],
+			"title": "Broadcast Queue Depth",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"gradientMode": "none",
+						"hideFrom": {
+							"tooltip": false,
+							"viz": false,
+							"legend": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "never",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							}
+						]
+					},
+					"unit": "bytes"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 60
+			},
+			"id": 20,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "10.2.2",
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "webchat_process_memory_rss_bytes",
+					"legendFormat": "{{instance}}",
+					"refId": "A"
+				}
+			],
+			"title": "Process Memory RSS by Worker",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "prometheus"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"gradientMode": "none",
+						"hideFrom": {
+							"tooltip": false,
+							"viz": false,
+							"legend": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "never",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "line"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "yellow",
+								"value": 0.1
+							},
+							{
+								"color": "red",
+								"value": 0.5
+							}
+						]
+					},
+					"unit": "s"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 68
+			},
+			"id": 21,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "10.2.2",
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "histogram_quantile(0.95, sum(rate(webchat_message_e2e_latency_seconds_bucket[5m])) by (le))",
+					"legendFormat": "p95",
+					"refId": "A"
+				},
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "prometheus"
+					},
+					"expr": "histogram_quantile(0.99, sum(rate(webchat_message_e2e_latency_seconds_bucket[5m])) by (le))",
+					"legendFormat": "p99",
+					"refId": "B"
+				}
+			],
+			"title": "End-to-End Message Latency",
+			"type": "timeseries"
 		}
 	],
 	"refresh": "5s",
