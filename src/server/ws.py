@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from enum import Enum, auto
@@ -9,10 +10,12 @@ from enum import Enum, auto
 from aiohttp import WSCloseCode, WSMessage, WSMsgType, web
 
 from server.metrics import (
+    BROADCAST_QUEUE_DEPTH,
     CONNECTED_USERS,
     CONNECTIONS_TOTAL,
     DISCONNECTIONS_TOTAL,
     ERRORS_TOTAL,
+    MESSAGE_E2E_LATENCY_SECONDS,
     track_message_processing,
 )
 from server.models import ChatMessage, json_dumps, json_loads
@@ -41,6 +44,7 @@ class WSMessageRouter:
     def __init__(self, redis_manager: RedisManager) -> None:
         self.clients: set[web.WebSocketResponse] = set()
         self.redis = redis_manager
+        self._active_broadcasts = 0
 
         self.redis.set_message_handler(self._broadcast_to_local_peers)
 
@@ -160,20 +164,35 @@ class WSMessageRouter:
             await self.redis.publish_message(obj)
 
     async def _broadcast_to_local_peers(self, message: ChatMessage) -> None:
-        payload = json_dumps(message)
+        # Track broadcast queue depth
+        self._active_broadcasts += 1
+        BROADCAST_QUEUE_DEPTH.set(self._active_broadcasts)
 
-        # Snapshotting the clients set is necessary here, as during await a
-        # client can disconnect, causing a mutation of the clients set, which
-        # will cause the iteration to fail.
-        clients_snapshot = tuple(self.clients)
+        try:
+            # Calculate end-to-end latency
+            message_created_ms = message.ts
+            broadcast_start_ms = int(time.time() * 1000)
+            e2e_latency_s = (broadcast_start_ms - message_created_ms) / 1000.0
+            MESSAGE_E2E_LATENCY_SECONDS.observe(e2e_latency_s)
 
-        broadcast_results = await asyncio.gather(
-            *(self._send_to_peer(peer, payload) for peer in clients_snapshot)
-        )
+            payload = json_dumps(message)
 
-        for peer, result in zip(clients_snapshot, broadcast_results, strict=True):
-            if result != PeerStatus.OK:
-                self.clients.discard(peer)
+            # Snapshotting the clients set is necessary here, as during await a
+            # client can disconnect, causing a mutation of the clients set, which
+            # will cause the iteration to fail.
+            clients_snapshot = tuple(self.clients)
+
+            broadcast_results = await asyncio.gather(
+                *(self._send_to_peer(peer, payload) for peer in clients_snapshot)
+            )
+
+            for peer, result in zip(clients_snapshot, broadcast_results, strict=True):
+                if result != PeerStatus.OK:
+                    self.clients.discard(peer)
+        finally:
+            # Decrement broadcast counter
+            self._active_broadcasts -= 1
+            BROADCAST_QUEUE_DEPTH.set(self._active_broadcasts)
 
     async def _send_to_peer(
         self, peer: web.WebSocketResponse, payload: str

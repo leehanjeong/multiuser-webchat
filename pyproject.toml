@@ -10,7 +10,7 @@ description = "Simple multi-user, single-room real-time chat built with aiohttp.
 requires-python = ">=3.13"
 
 # Runtime dependencies
-dependencies = ["aiohttp>=3.9", "redis>=5.0", "prometheus_client>=0.21"]
+dependencies = ["aiohttp>=3.9", "redis>=5.0", "prometheus_client>=0.21", "psutil>=5.9"]
 
 [project.optional-dependencies]
 # Development / QA tools (not installed in production)

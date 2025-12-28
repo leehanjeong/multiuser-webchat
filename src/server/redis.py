@@ -10,7 +10,7 @@ from typing import Any
 import redis.asyncio as redis
 from aiohttp import web
 
-from server.metrics import ERRORS_TOTAL, track_redis_operation
+from server.metrics import ERRORS_TOTAL, REDIS_STREAM_LAG_MESSAGES, track_redis_operation
 from server.models import ChatMessage, json_dumps, json_loads
 
 logger = logging.getLogger(__name__)
@@ -115,6 +115,15 @@ class RedisManager:
                 except Exception:
                     ERRORS_TOTAL.labels(type="redis_error").inc()
                     raise
+
+                # Track Redis Stream lag
+                try:
+                    stream_info = await self.client.xinfo_stream(self.STREAM_KEY)
+                    total_length = stream_info.get('length', 0)
+                    REDIS_STREAM_LAG_MESSAGES.set(total_length)
+                except Exception:
+                    # XINFO can fail on empty stream or if stream doesn't exist yet
+                    pass
 
                 if not stream_data:
                     # Timeout, no new messages in last 5 seconds
