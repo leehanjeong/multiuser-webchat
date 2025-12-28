@@ -22,38 +22,58 @@ class PrometheusExporter:
         self.running = True
         self.data: list[dict[str, float | str]] = []
 
-        # Metrics to collect
+        # Metrics to collect (쿼리 리스트)
         self.metrics = [
-            # User metrics
+            # 1. User & Connection Status
             "webchat_connected_users",
-            # Latency metrics (p95)
-            "histogram_quantile(0.95, rate(webchat_message_latency_seconds_bucket[1m]))",
-            "histogram_quantile(0.95, rate(webchat_message_e2e_latency_seconds_bucket[1m]))",
-            "histogram_quantile(0.95, rate(webchat_eventloop_lag_seconds_bucket[1m]))",
-            # Queue/lag metrics
+            "sum(rate(webchat_connections_total{status='attempted'}[30s]))",
+            "sum(rate(webchat_connections_total{status='success'}[30s]))",
+            "sum(rate(webchat_connections_total{status='upgrade_failed'}[30s]))",
+            "sum(rate(webchat_disconnections_total[30s]))",
+
+            # 2. Latency - P95 (평균적인 상황)
+            "histogram_quantile(0.95, sum(rate(webchat_message_e2e_latency_seconds_bucket[30s])) by (le))",
+            "histogram_quantile(0.95, sum(rate(webchat_message_latency_seconds_bucket[30s])) by (le))",
+            "histogram_quantile(0.95, sum(rate(webchat_eventloop_lag_seconds_bucket[30s])) by (le))",
+            "histogram_quantile(0.95, sum(rate(webchat_redis_latency_seconds_bucket[30s])) by (le))",
+
+            # 3. Latency - P99 (간헐적인 렉, 튀는 값 감지 - 핵심만 수집)
+            "histogram_quantile(0.99, sum(rate(webchat_message_e2e_latency_seconds_bucket[30s])) by (le))",
+            "histogram_quantile(0.99, sum(rate(webchat_eventloop_lag_seconds_bucket[30s])) by (le))",
+            
+            # 4. Internal Bottlenecks
             "webchat_redis_stream_lag_messages",
             "webchat_broadcast_queue_depth",
-            # Resource metrics
             "webchat_process_memory_rss_bytes",
-            # Throughput metrics
-            "rate(webchat_messages_total[1m])",
-            "rate(webchat_errors_total[1m])",
-            # Redis latency (p95)
-            "histogram_quantile(0.95, rate(webchat_redis_latency_seconds_bucket[1m]))",
+
+            # 5. Throughput & Errors
+            "sum(rate(webchat_messages_total[30s]))",
+            "sum(rate(webchat_errors_total[30s]))",
         ]
 
-        # Metric name mapping for clean column names
+        # CSV 컬럼 이름 매핑
         self.column_names = {
             "webchat_connected_users": "connected_users",
-            "histogram_quantile(0.95, rate(webchat_message_latency_seconds_bucket[1m]))": "message_latency_p95",
-            "histogram_quantile(0.95, rate(webchat_message_e2e_latency_seconds_bucket[1m]))": "e2e_latency_p95",
-            "histogram_quantile(0.95, rate(webchat_eventloop_lag_seconds_bucket[1m]))": "eventloop_lag_p95",
-            "webchat_redis_stream_lag_messages": "redis_stream_lag_messages",
-            "webchat_broadcast_queue_depth": "broadcast_queue_depth",
-            "webchat_process_memory_rss_bytes": "memory_rss_bytes",
-            "rate(webchat_messages_total[1m])": "message_rate",
-            "rate(webchat_errors_total[1m])": "error_rate",
-            "histogram_quantile(0.95, rate(webchat_redis_latency_seconds_bucket[1m]))": "redis_latency_p95",
+            "sum(rate(webchat_connections_total{status='attempted'}[30s]))": "conn_attempt_rate",
+            "sum(rate(webchat_connections_total{status='success'}[30s]))": "conn_success_rate",
+            "sum(rate(webchat_connections_total{status='upgrade_failed'}[30s]))": "conn_fail_rate",
+            "sum(rate(webchat_disconnections_total[30s]))": "disconn_rate",
+
+            # P95 Columns (더 명확한 이름)
+            "histogram_quantile(0.95, sum(rate(webchat_message_e2e_latency_seconds_bucket[30s])) by (le))": "e2e_latency_p95",
+            "histogram_quantile(0.95, sum(rate(webchat_message_latency_seconds_bucket[30s])) by (le))": "msg_process_p95",
+            "histogram_quantile(0.95, sum(rate(webchat_eventloop_lag_seconds_bucket[30s])) by (le))": "eventloop_lag_p95",
+            "histogram_quantile(0.95, sum(rate(webchat_redis_latency_seconds_bucket[30s])) by (le))": "redis_latency_p95",
+
+            # P99 Columns (핵심만)
+            "histogram_quantile(0.99, sum(rate(webchat_message_e2e_latency_seconds_bucket[30s])) by (le))": "e2e_latency_p99",
+            "histogram_quantile(0.99, sum(rate(webchat_eventloop_lag_seconds_bucket[30s])) by (le))": "eventloop_lag_p99",
+
+            "webchat_redis_stream_lag_messages": "redis_backlog",
+            "webchat_broadcast_queue_depth": "broadcast_queue",
+            "webchat_process_memory_rss_bytes": "memory_bytes",
+            "sum(rate(webchat_messages_total[30s]))": "message_rate",
+            "sum(rate(webchat_errors_total[30s]))": "error_rate",
         }
 
     def query_instant(self, metric: str) -> list[dict]:
@@ -80,6 +100,7 @@ class PrometheusExporter:
         """Collect all metrics at current timestamp."""
         row: dict[str, float | str] = {"timestamp": datetime.now().isoformat()}
 
+        # Collect Prometheus metrics
         for metric in self.metrics:
             clean_name = self.column_names.get(metric, metric)
 
@@ -114,7 +135,7 @@ class PrometheusExporter:
             print(
                 f"[{row['timestamp']}] Collected {len(row)-1} metrics "
                 f"(users={row.get('connected_users', 0):.0f}, "
-                f"latency={row.get('message_latency_p95', 0)*1000:.1f}ms)"
+                f"e2e_p95={row.get('e2e_latency_p95', 0)*1000:.1f}ms)"
             )
 
             time.sleep(interval)
