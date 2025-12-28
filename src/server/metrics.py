@@ -131,7 +131,14 @@ PROCESS_MEMORY_RSS_BYTES = Gauge(
     multiprocess_mode="livesum",
 )
 
-# 5. End-to-End Message Latency
+# 5. Process CPU Usage
+PROCESS_CPU_PERCENT = Gauge(
+    "webchat_process_cpu_percent",
+    "Process CPU usage percentage",
+    multiprocess_mode="livesum",
+)
+
+# 6. End-to-End Message Latency
 MESSAGE_E2E_LATENCY_SECONDS = Histogram(
     "webchat_message_e2e_latency_seconds",
     "Time from message creation to broadcast completion",
