@@ -13,7 +13,6 @@ from aiohttp import web
 
 from server.metrics import (
     EVENTLOOP_LAG_SECONDS,
-    PROCESS_CPU_PERCENT,
     PROCESS_MEMORY_RSS_BYTES,
     get_metrics_output,
 )
@@ -39,27 +38,22 @@ async def _monitor_eventloop_lag() -> None:
         await asyncio.sleep(1)
 
 
-async def _monitor_system_resources() -> None:
-    """Track process memory and CPU usage every 15 seconds."""
+async def _monitor_memory() -> None:
+    """Track process memory usage every 15 seconds."""
     try:
         import psutil
     except ImportError:
-        logger.warning("psutil not installed, skipping system resource monitoring")
+        logger.warning("psutil not installed, skipping memory monitoring")
         return
 
     process = psutil.Process()
     while True:
         try:
-            # Memory RSS
             memory_info = process.memory_info()
             PROCESS_MEMORY_RSS_BYTES.set(memory_info.rss)
-
-            # CPU percentage (interval=1 means measure over 1 second)
-            cpu_percent = process.cpu_percent(interval=1)
-            PROCESS_CPU_PERCENT.set(cpu_percent)
         except Exception:
-            logger.exception("Error collecting system resource metrics")
-        await asyncio.sleep(14)  # Total 15s (1s for cpu_percent + 14s sleep)
+            logger.exception("Error collecting memory metrics")
+        await asyncio.sleep(15)
 
 
 async def on_startup(app: web.Application) -> None:
@@ -72,8 +66,8 @@ async def on_startup(app: web.Application) -> None:
 
     # Start monitoring tasks
     asyncio.create_task(_monitor_eventloop_lag())
-    asyncio.create_task(_monitor_system_resources())
-    logger.info("Started event loop and system resource monitoring tasks")
+    asyncio.create_task(_monitor_memory())
+    logger.info("Started event loop and memory monitoring tasks")
 
 
 async def on_cleanup(app: web.Application) -> None:
