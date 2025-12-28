@@ -14,4 +14,5 @@ dependencies = ["aiohttp>=3.9", "redis>=5.0", "prometheus_client>=0.21", "psutil
 
 [project.optional-dependencies]
 # Development / QA tools (not installed in production)
-dev = ["pytest>=8.4", "mypy>=1.18", "ruff>=0.13"]
+dev = ["pytest>=8.4", "mypy>=1.18", "ruff>=0.13", "docker>=7.0"]
+

@@ -212,3 +212,12 @@ dist/
 
 # Node
 node_modules/
+
+# Load test results (generated data, not source code)
+load_test_results/
+
+# Documentation files (project-specific)
+CLAUDE.md
+GRAFANA_SETUP.md
+tools/LOAD_TEST_GUIDE.md
+tools/PHASE_GUIDE.md
