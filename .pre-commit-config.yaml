@@ -155,3 +155,13 @@ repos:
         pass_filenames: false
         require_serial: true
         always_run: true
+
+# ============================================================================
+  # Jupyter Notebook Hooks
+  # ============================================================================
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+        name: "[📓 jupyter      ] Strip output from notebooks"

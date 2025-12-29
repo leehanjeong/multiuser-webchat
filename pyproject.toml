@@ -16,3 +16,12 @@ dependencies = ["aiohttp>=3.9", "redis>=5.0", "prometheus_client>=0.21", "psutil
 # Development / QA tools (not installed in production)
 dev = ["pytest>=8.4", "mypy>=1.18", "ruff>=0.13", "docker>=7.0"]
 
+
+[dependency-groups]
+dev = [
+    "jupytext (>=1.18.1,<2.0.0)",
+    "nbdime (>=4.0.2,<5.0.0)",
+    "nbstripout (>=0.8.2,<0.9.0)",
+    "pre-commit (>=4.5.1,<5.0.0)",
+    "types-psutil (>=7.2.0.20251228,<8.0.0.0)"
+]

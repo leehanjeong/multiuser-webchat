@@ -221,3 +221,11 @@ CLAUDE.md
 GRAFANA_SETUP.md
 tools/LOAD_TEST_GUIDE.md
 tools/PHASE_GUIDE.md
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+notebooks/.virtual_documents/
+notebooks/*_copy.ipynb
+notebooks/*.backup

@@ -27,6 +27,8 @@ STATIC_RESOURCES_DIR = Path(__file__).resolve().parent.parent / "static"
 MINUTES_IN_HOUR = 60
 HOUR_IN_DAY = 24
 
+background_tasks = set()
+
 
 async def _monitor_eventloop_lag() -> None:
     """Measure event loop responsiveness every 1 second."""
@@ -41,7 +43,7 @@ async def _monitor_eventloop_lag() -> None:
 async def _monitor_memory() -> None:
     """Track process memory usage every 15 seconds."""
     try:
-        import psutil
+        import psutil  # type: ignore
     except ImportError:
         logger.warning("psutil not installed, skipping memory monitoring")
         return
@@ -65,8 +67,13 @@ async def on_startup(app: web.Application) -> None:
     logger.info("The server is now ready to listen to Redis stream messages!")
 
     # Start monitoring tasks
-    asyncio.create_task(_monitor_eventloop_lag())
-    asyncio.create_task(_monitor_memory())
+    task1 = asyncio.create_task(_monitor_eventloop_lag())
+    background_tasks.add(task1)
+    task1.add_done_callback(background_tasks.discard)  # 작업 완료 시 set에서 제거
+
+    task2 = asyncio.create_task(_monitor_memory())
+    background_tasks.add(task2)
+    task2.add_done_callback(background_tasks.discard)
     logger.info("Started event loop and memory monitoring tasks")
 
 
